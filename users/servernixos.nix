@@ -1,16 +1,9 @@
 { pkgs, ... }:
 
 {
-
   home.stateVersion = "25.05";
 
-  users.users.servernixos = 
-  {
-    isNormalUser = true;
-    extraGroups = [ "wheel" "dialout" ];
-  };
-
-  home.packages = with pkgs; 
+  home.packages = with pkgs;
   [
     tree
     util-linux
