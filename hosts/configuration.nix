@@ -64,14 +64,13 @@
       ensureUsers = 
       [{
         name = "thingsboard";
-        passwordFile = cfg.dbPasswordFile;
+        passwordFile = "/etc/nixos/secrets/thingsboard.pass";
       }];
       ensureDatabases = 
       [{
         name = "thingsboard";
         owner = "thingsboard";
       }];
-      dbPasswordFile = "/etc/nixos/secrets/thingsboard.pass";
     };    
   };
 
