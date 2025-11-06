@@ -59,16 +59,6 @@
     postgresql = 
     {
       enable = true;
-      ensureUsers = 
-      [{
-        name = "thingsboard";
-        passwordFile = "/etc/nixos/secrets/thingsboard.pass";
-      }];
-      ensureDatabases = 
-      [{
-        name = "thingsboard";
-        owner = "thingsboard";
-      }];
     };
 
     thingsboard = 
