@@ -6,7 +6,8 @@ with lib;
 let
   cfg = config.services.thingsboard;
 
-  thingsboardJar = pkgs.fetchurl {
+  thingsboardJar = pkgs.fetchurl 
+  {
     url = "https://github.com/sudhanshunitinatalkar/thingsboard/releases/download/v4.2/thingsboard-4.2.1-boot.jar";
     # This is the correct, full hash from your previous error
     sha256 = "sha256-5qzyiRlZ7xco0h0zh8+mE03W4ak1pKcg5OIzlyQDz3c=";
@@ -15,10 +16,12 @@ let
 in
 {
   # --- 1. DEFINE NEW OPTIONS ---
-  options.services.thingsboard = {
+  options.services.thingsboard = 
+  {
     enable = mkEnableOption "ThingsBoard IoT Platform";
 
-    dbPasswordFile = mkOption {
+    dbPasswordFile = mkOption 
+    {
       type = types.path;
       description = "Path to a file containing *only* the password for the thingsboard database user.";
       example = "/etc/nixos/secrets/thingsboard.pass";
@@ -26,10 +29,12 @@ in
   };
 
   # --- 2. CONFIGURE THE SYSTEM ---
-  config = mkIf cfg.enable {
+  config = mkIf cfg.enable 
+  {
 
     # --- Create a system user for the service ---
-    users.users.thingsboard = {
+    users.users.thingsboard = 
+    {
       isSystemUser = true;
       group = "thingsboard";
       home = "/var/lib/thingsboard";
@@ -40,14 +45,16 @@ in
     systemd.services = {
 
       # This is "Step 2" from nix.md: Install the Schema
-      thingsboard-schema = {
+      thingsboard-schema = 
+      {
         description = "ThingsBoard Schema Installation";
         after = [ "postgresql.service" ];
         requires = [ "postgresql.service" ];
 
         # We use 'root' to set up the database,
         # then 'sudo' to run the installer as the 'thingsboard' user.
-        serviceConfig = {
+        serviceConfig = 
+        {
           Type = "oneshot";
           RemainAfterExit = true;
           User = "root"; # <-- CHANGED
@@ -58,24 +65,24 @@ in
         # This script now contains all the logic from your nix.md
         script = ''
           # Wait for the database to be ready
-          until sudo -u thingsboard psql -c "select 1" >/dev/null 2>&1; do
+          until sudo -u postgres psql -c "select 1" >/dev/null 2>&1; do
             echo "Waiting for PostgreSQL..."
             sleep 1
           done
 
           echo "Ensuring database user 'thingsboard' exists..."
           # Create user if it doesn't exist
-          sudo -u thingsboard psql -c "CREATE USER thingsboard" 2>/dev/null || echo "User already exists."
+          sudo -u postgres psql -c "CREATE USER thingsboard" 2>/dev/null || echo "User already exists."
 
           echo "Ensuring database 'thingsboard' exists..."
           # Create DB if it doesn't exist
-          sudo -u thingsboard psql -c "CREATE DATABASE thingsboard OWNER thingsboard" 2>/dev/null || echo "Database already exists."
+          sudo -u postgres psql -c "CREATE DATABASE thingsboard OWNER thingsboard" 2>/dev/null || echo "Database already exists."
 
           echo "Setting 'thingsboard' user password..."
           # Read the password from the secret file
           DB_PASSWORD=$(cat ${cfg.dbPasswordFile})
           # Set the password
-          sudo -u thingsboard psql -c "ALTER USER thingsboard WITH PASSWORD '$DB_PASSWORD';"
+          sudo -u postgres psql -c "ALTER USER thingsboard WITH PASSWORD '$DB_PASSWORD';"
 
           # Check if the 'device' table exists.
           if sudo -u thingsboard psql -d thingsboard -c '\dt device' | grep -q 'device'; then
@@ -97,7 +104,8 @@ in
         '';
 
         # Environment variables for the Java installer
-        environment = {
+        environment = 
+        {
           DATABASE_TS_TYPE = "sql";
           SPRING_DATASOURCE_URL = "jdbc:postgresql://localhost:5432/thingsboard";
           SPRING_DATASOURCE_USERNAME = "thingsboard";
@@ -108,13 +116,15 @@ in
       };
 
       # This is "Step 3" from nix.md: Run the Server
-      thingsboard = {
+      thingsboard = 
+      {
         description = "ThingsBoard IoT Platform Server";
         wantedBy = [ "multi-user.target" ];
         after = [ "thingsboard-schema.service" ];
         requires = [ "thingsboard-schema.service" ];
 
-        serviceConfig = {
+        serviceConfig = 
+        {
           ExecStart = ''
             ${pkgs.openjdk17}/bin/java -Xms2G -Xmx2G -jar ${thingsboardJar}
           '';
@@ -125,7 +135,8 @@ in
         };
 
         # Environment variables for the main server
-        environment = {
+        environment = 
+        {
           DATABASE_TS_TYPE = "sql";
           SPRING_DATASOURCE_URL = "jdbc:postgresql://localhost:5432/thingsboard";
           SPRING_DATASOURCE_USERNAME = "thingsboard";
