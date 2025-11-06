@@ -88,7 +88,7 @@ in
 
         # This script checks if the DB is installed. If not, it runs the installer.
         # This makes the service safe to run on every boot.
-        preStart = ''
+        script = ''
           # Wait for the database to be ready
           until psql -U thingsboard -d thingsboard -c "select 1" >/dev/null 2>&1; do
             echo "Waiting for PostgreSQL..."
