@@ -58,27 +58,27 @@ in
         # This script now contains all the logic from your nix.md
         script = ''
           # Wait for the database to be ready
-          until sudo -u postgres psql -c "select 1" >/dev/null 2>&1; do
+          until sudo -u thingsboard psql -c "select 1" >/dev/null 2>&1; do
             echo "Waiting for PostgreSQL..."
             sleep 1
           done
 
           echo "Ensuring database user 'thingsboard' exists..."
           # Create user if it doesn't exist
-          sudo -u postgres psql -c "CREATE USER thingsboard" 2>/dev/null || echo "User already exists."
+          sudo -u thingsboard psql -c "CREATE USER thingsboard" 2>/dev/null || echo "User already exists."
 
           echo "Ensuring database 'thingsboard' exists..."
           # Create DB if it doesn't exist
-          sudo -u postgres psql -c "CREATE DATABASE thingsboard OWNER thingsboard" 2>/dev/null || echo "Database already exists."
+          sudo -u thingsboard psql -c "CREATE DATABASE thingsboard OWNER thingsboard" 2>/dev/null || echo "Database already exists."
 
           echo "Setting 'thingsboard' user password..."
           # Read the password from the secret file
           DB_PASSWORD=$(cat ${cfg.dbPasswordFile})
           # Set the password
-          sudo -u postgres psql -c "ALTER USER thingsboard WITH PASSWORD '$DB_PASSWORD';"
+          sudo -u thingsboard psql -c "ALTER USER thingsboard WITH PASSWORD '$DB_PASSWORD';"
 
           # Check if the 'device' table exists.
-          if sudo -u postgres psql -d thingsboard -c '\dt device' | grep -q 'device'; then
+          if sudo -u thingsboard psql -d thingsboard -c '\dt device' | grep -q 'device'; then
             echo "ThingsBoard schema already exists. Skipping installation."
           else
             echo "Running ThingsBoard schema installation..."
