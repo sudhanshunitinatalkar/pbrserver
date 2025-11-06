@@ -12,7 +12,7 @@
     useGlobalPkgs = true;
     useUserPackages = true;
     users.pbrserver = {
-      imports = [ ./users/pbrserver.nix ];
+      imports = [ ../home/home.nix ];
     };
   };
 
