@@ -11,12 +11,12 @@
   {
     useGlobalPkgs = true;
     useUserPackages = true;
-    users.servernixos = {
-      imports = [ ./users/servernixos.nix ];
+    users.pbrserver = {
+      imports = [ ./users/pbrserver.nix ];
     };
   };
 
-  users.users.servernixos = 
+  users.users.pbrserver = 
   {
     isNormalUser = true;
     extraGroups = [ "wheel" "dialout" ];

@@ -18,8 +18,8 @@
       modules = 
       [
         home-manager.nixosModules.home-manager
-        ./hosts/servernixos.nix
-        ./hosts/hardware-servernixos.nix      
+        ./hosts/configuration.nix
+        ./hosts/hardware-configuration.nix      
       ];
     };
   };
