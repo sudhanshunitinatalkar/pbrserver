@@ -56,6 +56,8 @@
 
     cloudflared.enable = true;
 
+    postgresql.enable = true;
+
     thingsboard = 
     {
       enable = true;
