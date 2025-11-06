@@ -139,6 +139,7 @@ in
 
         serviceConfig = 
         {
+          LoadCredential = "thingsboard.pass:${cfg.dbPasswordFile}";
           ExecStart = ''
             ${pkgs.openjdk17}/bin/java -Xms2G -Xmx2G -jar ${thingsboardJar}
           '';
@@ -154,7 +155,7 @@ in
           DATABASE_TS_TYPE = "sql";
           SPRING_DATASOURCE_URL = "jdbc:postgresql://localhost:5432/thingsboard";
           SPRING_DATASOURCE_USERNAME = "thingsboard";
-          SPRING_DATASOURCE_PASSWORD_FILE = cfg.dbPasswordFile;
+          SPRING_DATASOURCE_PASSWORD_FILE = "$CREDENTIALS_DIRECTORY/thingsboard.pass";
           SQL_POSTGRES_TS_KV_PARTITIONING = "MONTHS";
         };
       };
