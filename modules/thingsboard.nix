@@ -84,8 +84,8 @@ in
 
           echo "Setting 'thingsboard' user password..."
           # Set the password using "dollar-quoting" to handle any special characters
-          sudo -u postgres psql -c "ALTER USER thingsboard WITH PASSWORD $password$$DB_PASSWORD$password$;"
-
+          # Set the password using dollar-quoting, escaping the $ for the shell
+          sudo -u postgres psql -c "ALTER USER thingsboard WITH PASSWORD \$password\$$DB_PASSWORD\$password\$;"
           echo "Ensuring database 'thingsboard' exists..."
           # Create DB if it doesn't exist (run as postgres user)
           sudo -u postgres psql -c "CREATE DATABASE thingsboard OWNER thingsboard" 2>/dev/null || echo "Database already exists."
