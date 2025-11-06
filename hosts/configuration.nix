@@ -61,6 +61,16 @@
     thingsboard = 
     {
       enable = true;
+      ensureUsers = 
+      [{
+        name = "thingsboard";
+        passwordFile = cfg.dbPasswordFile;
+      }];
+      ensureDatabases = 
+      [{
+        name = "thingsboard";
+        owner = "thingsboard";
+      }];
       dbPasswordFile = "/etc/nixos/secrets/thingsboard.pass";
     };    
   };
