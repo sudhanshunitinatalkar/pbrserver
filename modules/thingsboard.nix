@@ -1,7 +1,7 @@
 { config, pkgs, lib, ... }:
 
 let
-  # --- REMEMBER TO KEEP YOUR HASH UPDATED IF YOU CHANGE THE FILE ---
+  # --- REMEMBER TO KEEP YOUR HASH UPDATED ---
   tbRelease = pkgs.fetchurl {
     url = "https://github.com/sudhanshunitinatalkar/thingsboard/releases/download/v4.2/PBR_Research_Thingsboard.v4.tar.gz";
     sha256 = "sha256-V2q4dCDhKXO5jK4sotE9PVDCyGZmzgCu1dLWBwm3ALk="; 
@@ -13,13 +13,12 @@ let
   '';
   
   thingsboardJar = "${tbHome}/thingsboard-4.2.1-boot.jar";
-  dbPassword = "thingsboard"; 
 
+  # Base environment variables (Password is now handled dynamically)
   envVars = {
     DATABASE_TS_TYPE = "sql";
     SPRING_DATASOURCE_URL = "jdbc:postgresql://localhost:5432/thingsboard?sslmode=disable";
     SPRING_DATASOURCE_USERNAME = "thingsboard";
-    SPRING_DATASOURCE_PASSWORD = dbPassword;
     SQL_POSTGRES_TS_KV_PARTITIONING = "MONTHS";
   };
   
@@ -27,10 +26,17 @@ let
   
   setupScript = pkgs.writeShellScript "thingsboard-setup.sh" ''
     set -e
+    
+    # --- CREDENTIAL LOADING ---
+    # Read the password from the secure systemd directory into a bash variable
+    DB_PASS="$(<"$CREDENTIALS_DIRECTORY/db_pass")"
+    
+    # Export for the ThingsBoard Java installer
+    export SPRING_DATASOURCE_PASSWORD="$DB_PASS"
+    # Export other standard variables
     export DATABASE_TS_TYPE="${envVars.DATABASE_TS_TYPE}"
     export SPRING_DATASOURCE_URL="${envVars.SPRING_DATASOURCE_URL}"
     export SPRING_DATASOURCE_USERNAME="${envVars.SPRING_DATASOURCE_USERNAME}"
-    export SPRING_DATASOURCE_PASSWORD="${envVars.SPRING_DATASOURCE_PASSWORD}"
     export SQL_POSTGRES_TS_KV_PARTITIONING="${envVars.SQL_POSTGRES_TS_KV_PARTITIONING}"
     
     dataDir="/var/lib/thingsboard/data"
@@ -50,13 +56,14 @@ let
     fi
 
     echo "Ensuring 'thingsboard' database user exists..."
+    # We use the $DB_PASS bash variable here, NOT the Nix variable
     run_as_pg ${pkgs.postgresql}/bin/psql -c "
       DO \$\$
       BEGIN
         IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'thingsboard') THEN
-          CREATE ROLE thingsboard LOGIN PASSWORD '${dbPassword}';
+          CREATE ROLE thingsboard LOGIN PASSWORD '$DB_PASS';
         ELSE
-          ALTER ROLE thingsboard WITH LOGIN PASSWORD '${dbPassword}';
+          ALTER ROLE thingsboard WITH LOGIN PASSWORD '$DB_PASS';
         END IF;
       END
       \$\$;"
@@ -72,9 +79,10 @@ let
     fi
     
     echo "Schema missing. Running ThingsBoard installation..."
-    # We also set HOME here for the installer just in case
+    
+    # Run installer with the loaded environment variables
     ${pkgs.util-linux}/bin/runuser -u thingsboard -g thingsboard -- \
-      env HOME=/var/lib/thingsboard \
+      env HOME=/var/lib/thingsboard SPRING_DATASOURCE_PASSWORD="$DB_PASS" \
       ${pkgs.openjdk17}/bin/java \
         -cp ${thingsboardJar} \
         -Dloader.main=org.thingsboard.server.ThingsboardInstallApplication \
@@ -92,7 +100,7 @@ in
     isSystemUser = true;
     group = "thingsboard";
     description = "ThingsBoard System User";
-    home = "/var/lib/thingsboard"; # Explicitly set home directory
+    home = "/var/lib/thingsboard";
   };
 
   systemd.services.thingsboard-setup = {
@@ -104,6 +112,8 @@ in
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
+      # Load credential for setup script too, as it needs it for creating the DB user
+      LoadCredential = [ "db_pass:/etc/nixos/secrets/tb_db_pass" ];
       ExecStart = "${pkgs.bash}/bin/bash ${setupScript}";
     };
   };
@@ -119,14 +129,16 @@ in
       Group = "thingsboard";
       Type = "simple";
       StateDirectory = "thingsboard";
-      WorkingDirectory = "/var/lib/thingsboard"; # Set working directory
+      WorkingDirectory = "/var/lib/thingsboard";
       Restart = "always";
       RestartSec = "10";
-      # Explicitly set HOME so Java knows where to write .rocksdb and other temp files
       Environment = lib.mapAttrsToList (name: value: "${name}=${value}") envVars ++ [ "HOME=/var/lib/thingsboard" ];
+      # Load the secret file
       LoadCredential = [ "db_pass:/etc/nixos/secrets/tb_db_pass" ];
-      ExecStart = ''
-        ${pkgs.openjdk17}/bin/java \
+      # Use a script to read the secret into an environment variable before starting Java
+      ExecStart = pkgs.writeShellScript "thingsboard-start" ''
+        export SPRING_DATASOURCE_PASSWORD="$(<"$CREDENTIALS_DIRECTORY/db_pass")"
+        exec ${pkgs.openjdk17}/bin/java \
           -Xms2G -Xmx2G \
           -Dinstall.data_dir=/var/lib/thingsboard/data \
           -jar ${thingsboardJar}
