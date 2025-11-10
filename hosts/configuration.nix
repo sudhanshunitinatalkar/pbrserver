@@ -69,6 +69,29 @@
       '';
     };
 
+    cloudflared = {
+    enable = true;
+    tunnels = {
+      "70d40540-2e65-4354-ba69-6d7ac6484a0e" = {
+        credentialsFile = "/home/pbrserver/.cloudflare/70d40540-2e65-4354-ba69-6d7ac6484a0e.json";
+        ingress = {
+          # ThingsBoard Web UI (Port 8080)
+          "iot.eltros.in" = "http://localhost:8080";
+
+          # MQTT (Port 1883) - Standard MQTT
+          "mqtt.eltros.in" = "tcp://localhost:1883";
+
+          # MQTTS (Port 8883) - MQTT over SSL/TLS
+          "mqtts.eltros.in" = "tcp://localhost:8883";
+    
+          # Catch-all 404 for unmatched traffic
+          "*" = "http_status:404";
+        };
+        defaultIngress = "http_status:404";
+      };
+    };
+
+  };
     
   };
 
