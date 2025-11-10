@@ -54,8 +54,6 @@
     libinput.enable = true;
     openssh.enable = true;
 
-    cloudflared.enable = true;
-
     postgresql = {
       enable = true;
       # Ensure standard authentication methods are set:
