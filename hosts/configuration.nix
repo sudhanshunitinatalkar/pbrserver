@@ -54,7 +54,8 @@
     libinput.enable = true;
     openssh.enable = true;
 
-    postgresql = {
+    postgresql = 
+    {
       enable = true;
       # Ensure standard authentication methods are set:
       # - 'local all all peer': Allows users to connect via socket if their OS username matches the DB username.
@@ -67,16 +68,12 @@
       '';
     };
 
-    cloudflared = 
-    {
+    cloudflared = {
       enable = true;
-      tunnels = 
-      {
-        "70d40540-2e65-4354-ba69-6d7ac6484a0e" = 
-        {
+      tunnels = {
+        "70d40540-2e65-4354-ba69-6d7ac6484a0e" = {
           credentialsFile = "/etc/nixos/secrets/70d40540-2e65-4354-ba69-6d7ac6484a0e.json";
-          ingress = 
-          {
+          ingress = {
             "iot.eltros.in" = "http://localhost:8080";
             "mqtt.eltros.in" = "tcp://localhost:1883";
             "mqtts.eltros.in" = "tcp://localhost:8883";
@@ -86,8 +83,6 @@
       };
     };
 
-  };
-    
   };
 
   environment.systemPackages = with pkgs; 
