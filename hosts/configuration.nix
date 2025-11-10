@@ -84,7 +84,7 @@
           default = "http_status:404";
         };
       };
-    }
+    };
 
   };
     
