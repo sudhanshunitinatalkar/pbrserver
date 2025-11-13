@@ -20,6 +20,7 @@ let
     SPRING_DATASOURCE_URL = "jdbc:postgresql://localhost:5432/thingsboard?sslmode=disable";
     SPRING_DATASOURCE_USERNAME = "thingsboard";
     SQL_POSTGRES_TS_KV_PARTITIONING = "MONTHS";
+    MQTT_WSS_ENABLED = "true";
   };
   
   setupPath = with pkgs; [ openjdk17 postgresql bash coreutils gnugrep util-linux ];
